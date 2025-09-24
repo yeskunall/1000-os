@@ -1,3 +1,4 @@
+#include "common.h"
 #include "kernel.h"
 
 typedef unsigned char uint8_t;
@@ -65,7 +66,8 @@ void kernel_main(void) {
         sbi_console_putchar(s[i]);
     }
 
-    // for(;;);
+    printf("\nHello, %s!\n", "printf");
+    printf("1 + 2 = %d, %x\n", 1 + 2, 0x1234abcd);
 
     // Placeholder idle-loop: do nothing till the CPU is interrupted
     for(;;) {

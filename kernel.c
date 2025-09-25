@@ -44,7 +44,7 @@ void bool(void) {
         "mv sp, %[stack_top]\n" // Set the stack pointer to the end address of the stack area defined in the linker script
         "j kernel_main\n" // Jump to the kernel main function
         :
-        : [stack_top] "r" (__stack_top) // Pass the __stack_top address as stack
+        : [stack_top] "r" (__stack_top) // Pass the __stack_top address as stack_top
     );
 }
 

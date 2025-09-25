@@ -90,8 +90,8 @@ void printf(const char *fmt, ...) {
         fmt++;
     }
 
-end:
-    va_end(vargs);
+    end:
+        va_end(vargs);
 }
 
 int strcmp(const char *s1, const char *s2) {

@@ -39,7 +39,7 @@ void sbi_console_putchar(char ch) {
 
 __attribute__((section(".text.boot"))) // Since OpenSBI jumps directly to 0x80200000 without knowing the entry point, the boot function needs to be placed here.
 __attribute__((naked)) // Don’t generate unnecessary code before and after the function body which allows the function inline assembly code to be the exact function body.
-void bool(void) {
+void boot(void) {
     __asm__ __volatile__(
         "mv sp, %[stack_top]\n" // Set the stack pointer to the end address of the stack area defined in the linker script
         "j kernel_main\n" // Jump to the kernel main function

@@ -1,4 +1,4 @@
-/* ALIGN(4) directive ensures that the current address is adjusted to a 4-byte boundary */
+/* ALIGN(n) directive ensures that the current address is adjusted to an n-byte boundary */
 
 /* Declare the entry point of the program */
 ENTRY(boot)
@@ -28,6 +28,12 @@ SECTIONS {
 
     . = ALIGN(4);
     /* Advance the current address by 128KB */
-    . += 128 * 1024; /* 128KB */
+    . += 128 * 1024;
     __stack_top = .;
+
+    . = ALIGN(4096);
+    __free_ram = .;
+    /* Advance the current address by 64MB */
+    . += 64 * 1024 * 1024;
+    __free_ram_end = .;
 }

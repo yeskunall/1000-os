@@ -3,6 +3,8 @@
 #define true  1
 #define false 0
 #define NULL  ((void *) 0)
+// The page size is 4KiB on most systems
+#define PAGE_SIZE 4096
 
 typedef int bool;
 typedef unsigned char uint8_t;

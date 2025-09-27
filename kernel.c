@@ -7,7 +7,7 @@ typedef uint32_t size_t;
 
 // __bss --> give me value at the 0th byte at __bss
 // __bss[] --> give me the start address of __bss section
-extern char __bss[], __bss_end[], __stack_top[];
+extern char __bss[], __bss_end[], __free_ram[], __free_ram_end[], __stack_top[];
 
 struct sbiret sbi_call(long arg0, long arg1, long arg2, long arg3, long arg4, long arg5, long fid, long eid) {
     register long a0 __asm__("a0") = arg0; // Place the value of arg0 into a0
@@ -41,6 +41,21 @@ void boot(void) {
         :
         : [stack_top] "r" (__stack_top) // Pass the __stack_top address as stack_top
     );
+}
+
+/* A simple bump (link) allocator that fills up memory in pages instead of bytes */
+paddr_t alloc_pages(uint32_t n) {
+    static paddr_t next_paddr = (paddr_t) __free_ram; // Retain the value of next_paddr across function calls
+    paddr_t paddr = next_paddr;
+
+    next_paddr += n * PAGE_SIZE;
+
+    if (next_paddr > (paddr_t) __free_ram_end)
+        PANIC("out of memory");
+
+    memset((void *) paddr, 0, n * PAGE_SIZE); // Allocated memory area is filled with zeroes
+
+    return paddr;
 }
 
 void handle_trap(struct trap_frame *f) {
@@ -139,17 +154,16 @@ void kernel_main(void) {
     memset(__bss, 0, (size_t) __bss_end - (size_t) __bss);
 
     WRITE_CSR(stvec, (uint32_t) kernel_entry); // Tell the CPU where the exception handler is located by writing to the stvec register
-    __asm__ __volatile__("unimp"); // A “pseudo”-instruction that translates to csrrw x0, cycle, x0. More importantly, this instruction is guaranteed to “trap” the CPU, causing a PANIC. See more: https://github.com/riscv-non-isa/riscv-asm-manual/blob/main/src/asm-manual.adoc#instruction-aliases
-    // llvm-addr2line -e kernel.elf 80200114 brings you here ^ --> convert a PC address into source file and line number
+    /* __asm__ __volatile__("unimp"); // A “pseudo”-instruction that translates to csrrw x0, cycle, x0. More importantly, this instruction is guaranteed to “trap” the CPU, causing a PANIC. See more: https://github.com/riscv-non-isa/riscv-asm-manual/blob/main/src/asm-manual.adoc#instruction-aliases */
+    // llvm-addr2line -e kernel.elf 80200114 brings you here ^ -->  llvm-addr2line converts a PC address into source file and line number
 
-    const char *s = "\nHello, world!\n";
+    paddr_t paddr0 = alloc_pages(2);
+    paddr_t paddr1 = alloc_pages(1);
+    printf("alloc_pages test: paddr0=%x\n", paddr0); // alloc_pages test: paddr0=80221000
+    printf("alloc_pages test: paddr1=%x\n", paddr1); // alloc_pages test: paddr1=80223000
+    // llvm-nm kernel.elf | grep __free_ram
 
-    for (int i = 0; s[i] != '\0'; i++) {
-        sbi_console_putchar(s[i]);
-    }
-
-    printf("\nHello, %s!\n", "printf");
-    printf("1 + 2 = %d, %x\n", 1 + 2, 0x1234abcd);
+    PANIC("booted!");
 
     // Placeholder idle-loop: do nothing till the CPU is interrupted
     for(;;) {
